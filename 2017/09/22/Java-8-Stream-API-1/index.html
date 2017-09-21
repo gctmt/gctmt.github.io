@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- Head tag -->
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!--Description-->
+    
+        <meta name="description" content="今天的三次用完了">
+    
+
+    <!--Author-->
+    
+        <meta name="author" content="leeyoungalias">
+    
+
+    <!--Open Graph Title-->
+    
+        <meta property="og:title" content="Java 8 Stream API (1):Spliterator"/>
+    
+
+    <!--Open Graph Description-->
+    
+        <meta property="og:description" content="今天的三次用完了" />
+    
+
+    <!--Open Graph Site Name-->
+    <meta property="og:site_name" content="传而习"/>
+
+    <!--Type page-->
+    
+        <meta property="og:type" content="article" />
+    
+
+    <!--Page Cover-->
+    
+
+    <meta name="twitter:card" content="summary" />
+    
+
+    <!-- Title -->
+    
+    <title>Java 8 Stream API (1):Spliterator - 传而习</title>
+
+    <!-- Tachyons Core CSS -->
+    <link rel="stylesheet" href="//unpkg.com/tachyons/css/tachyons.min.css">
+
+    <!-- Custom Fonts -->
+    <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="//oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="//oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/style.css">
+
+    <!-- Google Analytics -->
+    
+
+
+</head>
+
+
+<body>
+
+<!-- Main Content -->
+<!-- Banner -->
+<!-- Banner -->
+<div class="w-100 bg-1 ph5-ns ph3 text-light">
+    
+    <nav class="db dt-l w-100 mw8 center border-box pv3">
+        <a class="db dtc-l v-mid link dim w-100 w-25-l tc tl-l mb2 mb0-l white" href="/" title="传而习">
+            <img src="/anodyne.svg" class="dib h3" alt="传而习">
+        </a>
+        <div class="db dtc-l v-mid w-100 w-75-l tc tr-l">
+            
+                <a class="link dim f6 f5-l dib mr3 mr4-l white" 
+                    href="/" 
+                    title="Home">
+                    Home
+                </a>
+            
+                <a class="link dim f6 f5-l dib mr3 mr4-l white" 
+                    href="/archives" 
+                    title="Archives">
+                    Archives
+                </a>
+            
+                <a class="link dim f6 f5-l dib mr3 mr4-l white" 
+                    href="/about.html" 
+                    title="About">
+                    About
+                </a>
+            
+                <a class="link dim f6 f5-l dib mr3 mr4-l white" 
+                    href="/contact.html" 
+                    title="Contact">
+                    Contact
+                </a>
+            
+        </div>
+    </nav>
+
+    <!-- Title -->
+    <div class="w-100 mw8 center vh-40 dt">
+        <div class="dtc v-mid white">
+            <h1 class="f1-l f2-m tc tc-m tl-ns">Java 8 Stream API (1):Spliterator</h1>
+            <p class="f4 fw3 pab-100px tc tc-m tl-ns">2017-09-22</p>
+        </div>
+    </div>
+
+    <!-- Icon -->
+    <div class="relative w-100 mw8 center white dn dn-m db-ns">
+        <i class="header-icon fa fa-file-text-o"></i>
+    </div>
+</div>
+
+<!-- Content -->
+<div class="w-100 ph2 ph4-m ph5-l mv5 mv6-l">
+    <div class="content">
+        <div class="mw8 center">
+            <div class="cf">
+                <div class="fl w-100 w-70-l mw7 left fw3 lh-copy pr4-ns pr0-m post-content">
+                    <!-- Tags Vertical -->
+                    
+                        <div class="tags-container-vertical">
+                            <div class="tags-sub-container">
+                                <a class="fw3 ph1 dib" href="/tags/Java/">#Java</a> <a class="fw3 ph1 dib" href="/tags/FP/">#FP</a> <a class="fw3 ph1 dib" href="/tags/rt-jar/">#rt.jar</a> <a class="fw3 ph1 dib" href="/tags/Code/">#Code</a> <a class="fw3 ph1 dib" href="/tags/Stream-API/">#Stream API</a>
+                            </div>
+                        </div>
+                    
+
+                    <!-- Main Post Content -->
+                    <h1 id="写在正文之前"><a href="#写在正文之前" class="headerlink" title="写在正文之前"></a>写在正文之前</h1><p>在<a href="/2017/09/14/Java-8-Optional/" title="Optional">Optional</a>的文章中，我发现我大量的文本都在描述Optional到底怎么使用，这个确实有点偏离我的初衷，但其实是正常的，这个工具没有复杂的设计，带上注释也只有300+行代码，确实谈不上到源代码解析的程度。</p>
+<h1 id="问题-如何操作集合进行聚合操作？"><a href="#问题-如何操作集合进行聚合操作？" class="headerlink" title="问题:如何操作集合进行聚合操作？"></a>问题:如何操作集合进行聚合操作？</h1><p>假设存在一个Array，有一个典型任务要求计算所有内容的总长度(聚合操作)。</p>
+<h3 id="代码1"><a href="#代码1" class="headerlink" title="代码1"></a>代码1</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">String[] param = <span class="keyword">new</span> String[]&#123;<span class="string">"this"</span>,<span class="string">"is"</span>,<span class="string">"a"</span>,<span class="string">"test"</span>&#125;;</div></pre></td></tr></table></figure>
+<p>在传统代码上怎么写<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">int</span> len = <span class="number">0</span>;</div><div class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; param.length; i++) &#123;</div><div class="line">    len += param[i].length();</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>如果只是输出每个内容物的长度，那么，其实还可以用<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">Arrays.asList(param).forEach</div></pre></td></tr></table></figure></p>
+<p>但是聚合操作不行，直至Java 9 ，匿名类和lambda里面对于捕获的变量的访问一定是final的，不允许修改的，所以实际上对于Array的聚合操作只有两种方法，基于偏移的直接访问操作和迭代器访问操作。<br>如果是在Java 8中使用Stream API可以很简单的完成这一任务。</p>
+<h3 id="代码2"><a href="#代码2" class="headerlink" title="代码2"></a>代码2</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">Arrays.stream(param)</div><div class="line">      .mapToInt(pa-&gt; pa.length())</div><div class="line">      .sum();</div></pre></td></tr></table></figure>
+<p>对于Stream API的使用和基本概念可以看一下这篇参考文档<a href="https://www.ibm.com/developerworks/cn/java/j-lo-java8streamapi/index.html" target="_blank" rel="external">IBM Developer Works: Java 8 中的 Streams API 详解</a>，我觉得重新写一套没有意义，集中于重点，RT.JAR实现与类结构。</p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>我们从<a href="#代码2">代码2</a>开始往下探查，对于<a href="#代码2">代码2</a>中的Array的Stream创建最终都会委托到<br>代码3<br><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Stream&lt;T&gt; <span class="title">stream</span><span class="params">(T[] array)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> stream(array, <span class="number">0</span>, array.length);</div><div class="line">    &#125;</div><div class="line"></div><div class="line"><span class="comment">/* 该方法意味着可以在生成Array的流的时候只操作中间一部分而不需要将其拷贝出来 */</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Stream&lt;T&gt; <span class="title">stream</span><span class="params">(T[] array, <span class="keyword">int</span> startInclusive, <span class="keyword">int</span> endExclusive)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> StreamSupport.stream(spliterator(array,startInclusive, endExclusive), </div><div class="line">                                    <span class="keyword">false</span>);</div><div class="line">    &#125;</div></pre></td></tr></table></figure></p>
+<p>其中</p>
+<h3 id="代码4"><a href="#代码4" class="headerlink" title="代码4"></a>代码4</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">spliterator(array,startInclusive, endExclusive)</div><div class="line"><span class="comment">//内部实现如下:</span></div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Spliterator&lt;T&gt; <span class="title">spliterator</span><span class="params">(T[] array, <span class="keyword">int</span> startInclusive, <span class="keyword">int</span> endExclusive)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> Spliterators.spliterator(array,</div><div class="line">                                        startInclusive, </div><div class="line">                                        endExclusive, </div><div class="line">                                        Spliterator.ORDERED |Spliterator.IMMUTABLE);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> ORDERED    = <span class="number">0x00000010</span>;</div><div class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> IMMUTABLE  = <span class="number">0x00000400</span>;</div></pre></td></tr></table></figure>
+<p>这行代码的作用就是创建一个Spliterator，根据原代码的注释，Spliterator的作用就是对数据源的分割，数据源可以是Array，集合(collection)，或者<abbr title="Java 里面还没有这个鬼东西，但是文档是这么说的 _(:з)∠)_">Generator Function</abbr>。<br>上面的代码中在进行委托调用<code>Spliterators.spliterator</code>的时候非常有意思，第三个参数是一个逻辑或运算得出的<code>Spliterator.ORDERED |Spliterator.IMMUTABLE</code> 得出的结果为<code>0x00000410</code> (BTW:这种操作一般是用来做属性标记位，比如<code>chmod</code>指令里面的RWX一样的做法，有过win32 窗口API经验或者在OC里面看过枚举的都应该很熟悉这种做法。)</p>
+<p>上面的代码是委托到下面的方法执行</p>
+<h3 id="代码5"><a href="#代码5" class="headerlink" title="代码5"></a>代码5</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">Spliterator&lt;T&gt; <span class="title">spliterator</span><span class="params">(Object[] array, <span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex,</span></span></div><div class="line"><span class="function"><span class="params">                                                 <span class="keyword">int</span> additionalCharacteristics)</span> </span>&#123;</div><div class="line">        checkFromToBounds(Objects.requireNonNull(array).length,</div><div class="line">                          fromIndex, </div><div class="line">                          toIndex);</div><div class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ArraySpliterator&lt;&gt;(array, </div><div class="line">                                      fromIndex, </div><div class="line">                                      toIndex, </div><div class="line">                                      additionalCharacteristics);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<p><code>checkFromToBounds</code>的作用是为了防止访问的时候出现OOB(OutOfBounds)异常，下面的直接创建了一个<code>ArraySpliterator</code>对象<code>ArraySpliterator</code>类实现了<code>Spliterator</code>接口，对于<code>ArraySpliterator</code>对象的构造</p>
+<h3 id="代码6"><a href="#代码6" class="headerlink" title="代码6"></a>代码6</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ArraySpliterator</span><span class="params">(Object[] array, <span class="keyword">int</span> origin, <span class="keyword">int</span> fence, <span class="keyword">int</span> additionalCharacteristics)</span> </span>&#123;</div><div class="line">            <span class="keyword">this</span>.array = array;<span class="comment">//原始Array</span></div><div class="line">            <span class="keyword">this</span>.index = origin;<span class="comment">//从0开始访问</span></div><div class="line">            <span class="keyword">this</span>.fence = fence;<span class="comment">//访问结尾</span></div><div class="line">            <span class="keyword">this</span>.characteristics = additionalCharacteristics | Spliterator.SIZED | Spliterator.SUBSIZED;</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SIZED      = <span class="number">0x00000040</span>;</div><div class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> SUBSIZED = <span class="number">0x00004000</span>;</div></pre></td></tr></table></figure>
+<p>参数<code>characteristics</code>再次发生了变化计算后的值为<code>Ox00004450</code> ,至此<code>ArraySpliterator</code>对象创建完成。</p>
+<h2 id="我们再看一下Spliterator的接口组成"><a href="#我们再看一下Spliterator的接口组成" class="headerlink" title="我们再看一下Spliterator的接口组成"></a>我们再看一下<code>Spliterator</code>的接口组成</h2><img src="/2017/09/22/Java-8-Stream-API-1/spliterator.png" alt="Optional类结构" title="Optional类结构">
+<ul>
+<li><p><code>tryAdvance(Consumer&lt;? super T&gt; action):boolean</code> 如果存在元素，使用给定的<code>action</code>lambda(或者匿名类实现)对元素进行操作，同时如果这个<code>Spliterator</code>是有顺序(有顺序，看一下上面的<a href="#代码4">代码4</a>中就是用入参<code>additionalCharacteristics</code>标记了<code>ArraySpliterator</code>是有序的<code>Spliterator</code>)的，则将记录消费位置的游标移至下一个元素处。<br>  可以看一下<code>ArraySpliterator</code>中<code>tryAdvance</code>的实现</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line"><span class="meta">@Override</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryAdvance</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; action)</span> </span>&#123;</div><div class="line">            <span class="keyword">if</span> (action == <span class="keyword">null</span>)</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">            <span class="keyword">if</span> (index &gt;= <span class="number">0</span> &amp;&amp; index &lt; fence) &#123;</div><div class="line">                 <span class="comment">/* 由于是有序的Spliterator，则必须将游标指向下一个等待操作的元素*/</span></div><div class="line">                <span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>) T e = (T) array[index++];</div><div class="line">                action.accept(e);<span class="comment">/* 使用action对元素进行操作*/</span></div><div class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</div><div class="line">            &#125;</div><div class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><code>forEachRemaining(Consumer&lt;? super T&gt; action):void</code> 在当前的线程里面，对所有的元素都操作一遍，如果这个<code>Spliterator</code>是有序的，则按照顺序进行遍历，直到所有的元素均处理完或者抛出异常。可以看一看<code>Spliterator</code>中<code>forEachRemaining</code>的默认实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">default</span> <span class="keyword">void</span> <span class="title">forEachRemaining</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; action)</span> </span>&#123;</div><div class="line">        <span class="keyword">do</span> &#123; &#125; <span class="keyword">while</span> (tryAdvance(action));</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>  同时再看一看<code>ArraySpliterator</code>中<code>forEachRemaining</code>的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">forEachRemaining</span><span class="params">(Consumer&lt;? <span class="keyword">super</span> T&gt; action)</span> </span>&#123;</div><div class="line">            Object[] a; <span class="keyword">int</span> i, hi; <span class="comment">// hoist accesses and checks from loop</span></div><div class="line">            <span class="keyword">if</span> (action == <span class="keyword">null</span>)</div><div class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</div><div class="line">                <span class="comment">/* 注意。此处与默认实现不同的是</span></div><div class="line"><span class="comment">                *  默认实现在Spliterator是有序的情况下会移动游标</span></div><div class="line"><span class="comment">                *  这个实现并不会，只是单纯的遍历</span></div><div class="line"><span class="comment">                */</span></div><div class="line">            <span class="keyword">if</span> ((a = array).length &gt;= (hi = fence) &amp;&amp;</div><div class="line">                (i = index) &gt;= <span class="number">0</span> &amp;&amp; i &lt; (index = hi)) &#123;</div><div class="line">                <span class="keyword">do</span> &#123; action.accept((T)a[i]); &#125; <span class="keyword">while</span> (++i &lt; hi);</div><div class="line">            &#125;</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><code>trySplit():Spliterator&lt;T&gt;</code>如果当前<code>Spliterator</code>可以被分割(无限长度的<code>Spliterator</code>就是无法分割的)，则进行分割，直接这样说其实很莫名其妙，这个方法的存在其实是为了对一个比较大的<code>Spliterator</code>进行并行处理，将一个大的<code>Spliterator</code>分割成若干小的分别进行操作，然后对结果再次进行合并，就像快排，快排被第一个值分割成为两边后，两边可以交由不同的线程并行处理，大大提高并行效率。如果还是无法直接理解，我们可以看一下<code>ArraySpliterator</code>中该方法的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> Spliterator&lt;T&gt; <span class="title">trySplit</span><span class="params">()</span> </span>&#123;</div><div class="line">            <span class="comment">/* 可能写JavaSE Lib的大佬都喜欢写移位二分不喜欢/操作*/</span></div><div class="line">            <span class="keyword">int</span> lo = index, mid = (lo + fence) &gt;&gt;&gt; <span class="number">1</span>;</div><div class="line">            <span class="keyword">return</span> (lo &gt;= mid)</div><div class="line">                   ? <span class="keyword">null</span></div><div class="line">                   <span class="comment">/* 从中间对当前Spliterator进行二分，</span></div><div class="line"><span class="comment">                   *  this Spliterator只包含后半截，</span></div><div class="line"><span class="comment">                   *  前半截的操作交给另一个并行操作处理</span></div><div class="line"><span class="comment">                   */</span></div><div class="line">                   : <span class="keyword">new</span> ArraySpliterator&lt;&gt;(array, lo, index = mid, characteristics);</div><div class="line">        &#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><code>estimateSize():long</code> 能够被forEachRemaining操作到的所有的元素的个数，如果大小是无限，未知，或者计算代价高昂则直接返回Long#MAX_VALUE</p>
+</li>
+<li><code>getExactSizeIfKnown():long</code> 更加严谨的计算大小的方法，只有当前<code>Spliterator</code>是可以被计算大小的才会计算调用<code>estimateSize():long</code>大小并返回否则直接返回-1。是否可以计算大小其实也是由<code>Spliterator</code>中的一个属性进行标记，比如<a href="#代码6">代码6</a>中构造<code>ArraySpliterator</code>对象时<code>additionalCharacteristics | Spliterator.SIZED</code>就标记了该<code>Spliterator</code>是可以被统计大小的。</li>
+<li><code>characteristics():int</code>获取记录了<code>Spliterator</code>基础属性标记位置的数值，属性开关标记是按位查找的。在类图中那些类常量就是用来标记位的，对基础数据0或操作一个静态常量就会将该标记位置激活，如果想取消掉该标记，将标记位重新异或标记为常量就好了(逻辑操作)。比如ORDERED常数为<code>0x00000010</code>，那么它的标记位就在第28位(从1开始计数)。</li>
+<li><p><code>hasCharacteristics(int characteristics):boolean</code>校验标记位或者多个标记为的组合是否打开，看默认实现就是一个简单的与运算</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">hasCharacteristics</span><span class="params">(<span class="keyword">int</span> characteristics)</span> </span>&#123;</div><div class="line">        <span class="keyword">return</span> (characteristics() &amp; characteristics) == characteristics;</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p><code>Comparator&lt;? super T&gt; getComparator()</code>如果<code>Spliterator</code>是有序的(ORDERED标记位打开)，且有序是由一个排序lambda或者<code>Comparator</code>对象进行排序的就返回该<code>Comparator</code>对象，如果本身就是有序的比如<code>ArraySpliterator</code>就直接返回null,否则抛出异常，可以看一下<code>ArraySpliterator</code>的实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">public</span> Comparator&lt;? <span class="keyword">super</span> T&gt; getComparator() &#123;</div><div class="line">    <span class="keyword">if</span> (hasCharacteristics(Spliterator.SORTED))</div><div class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</div><div class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException();</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><code>Spliterator</code>对象创建完成后就会进行Pipeline对象的构造将在下一篇说明，当所有的对象流程都清晰后，我将会重新再次梳理并将每一种对象的描述文章的结尾重写。</p>
+
+                    
+                    <!-- Tags Bottom -->
+                    
+                        <div class="tags-container-bottom">
+                            <i class="fa fa-tag pr3 text-main-color"></i><a class="fw3 ph1 dib" href="/tags/Java/">#Java</a> <a class="fw3 ph1 dib" href="/tags/FP/">#FP</a> <a class="fw3 ph1 dib" href="/tags/rt-jar/">#rt.jar</a> <a class="fw3 ph1 dib" href="/tags/Code/">#Code</a> <a class="fw3 ph1 dib" href="/tags/Stream-API/">#Stream API</a>
+                        </div>
+                    
+
+                    <!-- Comments -->
+                    
+
+
+
+                </div>
+                <div class="fl w-100 w-30-l center fw3 lh-copy pl4-ns tl black-50">
+                    
+                    <hr class="dn-l mw4 black-50 mt5" />
+                    
+                    <!-- Widget 1: About -->
+                    <div class="mt5 mt0-l">
+    <article class="dt db-l mw8 mw8-m mw5-ns center ml0-l bg-white mv3">
+        <div class="dn dtc-m db-l v-mid tc pr4 pr0-l" style="min-width: 6rem;">
+            <img src="/images/avantor.png" class="mb4-l br-100 h3 w3 h4-l w4-l dib" title="leeyoungalias">
+        </div>
+        <div class="dtc db-l v-mid lh-copy measure center f6 black-50 tj">
+            隐约雷鸣 阴霾天空 但盼风雨来 能留你在此<br>隐约雷鸣 阴霾天空 即使天无雨 我亦留此地
+        </div>
+    </article>
+</div>
+
+                    <hr class="dn-l mw4 black-50 mt5" />
+                    
+                    <!-- Widget 2: Categories -->
+                    
+
+                    <!-- Widget 3: Recent Posts -->
+                    <div class="mt5 tc tl-l">
+    <h3>最近发表</h3>
+    
+        <p>
+            <a href="/2017/09/22/Java-8-Stream-API-1/">Java 8 Stream API (1):Spliterator</a>
+        </p>
+    
+        <p>
+            <a href="/2017/09/14/Java-8-Optional/">Java 8 Optional的使用与源代码探讨</a>
+        </p>
+    
+        <p>
+            <a href="/2017/09/14/home/">放在页首的话</a>
+        </p>
+    
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- UY BEGIN -->
+    <!-- <div id="uyan_frame"></div>
+    <script type="text/javascript" src="//v2.uyan.cc/code/uyan.js"></script> -->
+    <!-- UY END -->
+</div>
+
+
+<!-- Footer -->
+<div class="bg-1 ph2 ph5-ns pv5">
+    <div class="mv8">
+        <div class="center tc">
+            
+                <div class="dib mh3">
+                    <a class="f3 f2-ns white dim" href="https://github.com/leeyoungalias" target="_blank">
+                            <i class="fa fa-github"></i>
+                        </a>
+                </div>
+                
+        </div>
+        <div class="f6 f5-ns center tc white pt5 fw3">
+            <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="知识共享许可协议" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br
+            />本作品采用<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0//deed.zh">知识共享署名-相同方式共享 4.0 国际许可协议</a>进行许可。
+            <!--
+            CC
+            -->
+        </div>
+    </div>
+</div>
+
+<!-- After Footer -->
+<!-- Disqus Comments -->
+
+
+
+</body>
+
+</html>
