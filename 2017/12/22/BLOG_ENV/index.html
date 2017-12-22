@@ -20,7 +20,7 @@
 
     <!--Open Graph Title-->
     
-        <meta property="og:title" content="放在页首的话"/>
+        <meta property="og:title" content="自己实验环境的配置"/>
     
 
     <!--Open Graph Description-->
@@ -44,7 +44,7 @@
 
     <!-- Title -->
     
-    <title>放在页首的话 - 传而习</title>
+    <title>自己实验环境的配置 - 传而习</title>
 
     <!-- Tachyons Core CSS -->
     <link rel="stylesheet" href="//unpkg.com/tachyons/css/tachyons.min.css">
@@ -112,8 +112,8 @@
     <!-- Title -->
     <div class="w-100 mw8 center vh-40 dt">
         <div class="dtc v-mid white">
-            <h1 class="f1-l f2-m tc tc-m tl-ns">放在页首的话</h1>
-            <p class="f4 fw3 pab-100px tc tc-m tl-ns">2017-09-14</p>
+            <h1 class="f1-l f2-m tc tc-m tl-ns">自己实验环境的配置</h1>
+            <p class="f4 fw3 pab-100px tc tc-m tl-ns">2017-12-22</p>
         </div>
     </div>
 
@@ -133,22 +133,42 @@
                     
                         <div class="tags-container-vertical">
                             <div class="tags-sub-container">
-                                <a class="fw3 ph1 dib" href="/tags/home/">#home</a>
+                                <a class="fw3 ph1 dib" href="/tags/Docker/">#Docker</a> <a class="fw3 ph1 dib" href="/tags/nginx/">#nginx</a>
                             </div>
                         </div>
                     
 
                     <!-- Main Post Content -->
-                    <p>熟悉我的朋友都知道，这两年来，我一直过得比较安逸，怠惰，说人话就是:懒，不过貌似在大学也一样，哈哈。有件事一直拖着拖了很久，作为Java开发者一定要干的一件事到现在我都还没有干&lt;把JRE LIB看一遍&gt;大概是时候了，在这么怠惰下去人真的要废掉了。接下来我写的博文可能有误，有误的话麻烦指正，直接发送到这个邮箱<br>    </p><p style="display='inline-block'"><a>lee</a><a>you</a><a>ng</a><a>.li</a>#<a>out</a><a>look</a><a>.co</a><a>m</a></p><br>就可以了。<p></p>
-<h1 id="孔子曰：“三人行，则必有我师”。是故弟子不必不如师，师不必贤于弟子。闻道有先后，术业有专攻，如是而已。"><a href="#孔子曰：“三人行，则必有我师”。是故弟子不必不如师，师不必贤于弟子。闻道有先后，术业有专攻，如是而已。" class="headerlink" title="孔子曰：“三人行，则必有我师”。是故弟子不必不如师，师不必贤于弟子。闻道有先后，术业有专攻，如是而已。"></a>孔子曰：“三人行，则必有我师”。是故弟子不必不如师，师不必贤于弟子。闻道有先后，术业有专攻，如是而已。</h1><p>共勉</p>
-<p>关于Liences的选择，一开始我是打算选择<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh" target="_blank" rel="external">CC BY-NC-SA 4.0</a>,但是秉承着对自由与开放的向往我最终选择了<a href="https://creativecommons.org/licenses/by-sa/4.0//deed.zh" target="_blank" rel="external">CC BY-SA 4.0</a>，万一涉及到商业使用捐赠的话，捐给<a href="https://donate.mozilla.org" target="_blank" rel="external">Mozilla Foundation</a>吧，这是我的信仰。</p>
-<p>BTW,hexo这个markdown翻译器总感觉有奇奇怪怪的BUG，主题也需要花时间调教。</p>
+                    <p>很纠结，想做点东西，却又不知道做啥好<br><br>不过最近再看kotlin，于是就用kotlin+SpringBoot写了个Echo 然后配置了一下完整的部署流程<br><br>BTW.缺少EC依然很蛋疼</p>
+<h2 id="接入"><a href="#接入" class="headerlink" title="接入"></a>接入</h2><h4 id="NGINX安装"><a href="#NGINX安装" class="headerlink" title="NGINX安装"></a>NGINX安装</h4><p>由于偏向后端服务，而且也并没有准备写页面，所以就没有放cloudflare了，直接用nginx作为http server了.本来可以直接用NGINX官方repo直接用软件包安装的，但是我一直想试一下<a href="https://www.libressl.org/" target="_blank" rel="external">LibreSSL</a>(LibreSSL是OpenSSL心脏出血漏洞后由OpenBSD开发者从1.0.1 fork的一个版本，<a href="https://www.openbsd.org/papers/bsdcan14-libressl/" target="_blank" rel="external">官方的宣传</a>)是否可以替代OpenSSL，于是手动编译了，编译参数可以根据./configure –help自行调整，我主要的参数调整就是关闭了不需要的邮件proxy，以及其他的语言网关，然后手动打开了HTTP/2和SSL<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">--with-http_ssl_module</div><div class="line">--with-http_v2_module</div></pre></td></tr></table></figure></p>
+<p>还需要手动指定LibreSSL目录<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">--with-openssl=../libressl-2.6.3</div></pre></td></tr></table></figure></p>
+<p>目前看来替换完全OK，我以前在MAC上构建使用LibreSSL构建GIT时不知道为什么失败了，估计是以前的BUG吧。唯一的遗憾就是LibreSSL目前仍然不支持草案状态的TLSv1.3，，有人提了这个<a href="https://github.com/libressl-portable/portable/issues/228" target="_blank" rel="external">issue</a>，开发者的意思是:”这东西还在草案，别急(你急也没用)。” (BTW. OpenSSL 1.1+版本已经实现，TLSv1.3是个非常重要的版本，握手方式优化，简化了握手流程，据说减少1/3的连接建立时间)</p>
+<h4 id="NGINX的配置"><a href="#NGINX的配置" class="headerlink" title="NGINX的配置"></a>NGINX的配置</h4><p>主要做了几点</p>
+<ol>
+<li><p>HTTP强制301到HTTPS(仔细想想，貌似没啥卵用。毕竟没有页面。)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">if ($scheme = http)&#123;</div><div class="line">            rewrite ^/(.*) https://$host$request_uri permanent;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+</li>
+<li><p>开启HSTS(没有页面就不做CSP了，但是HSTS还是要做滴，最新版的wget都支持HSTS了)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">add_header Strict-Transport-Security &quot;max-age=15768000; includeSubDomains&quot; always;</div></pre></td></tr></table></figure>
+</li>
+<li><p>mirror，不直接将服务暴露额外搞个NGINX主要原因也是因为要用NGINX的mirror流量复制功能，方便需要本地写的时候直接接入，而又不侵入环境（不知道为什么mirror时proxy_pass一定要强制附加$request_uri）当然还有一个考虑就是以后在这儿做接入控制。</p>
+</li>
+</ol>
+<h2 id="代码以及代码仓库"><a href="#代码以及代码仓库" class="headerlink" title="代码以及代码仓库"></a>代码以及代码仓库</h2><p>代码托管于BitBucket，为什么不是Gayhub，因为Gayhub的私有repo要钱。同时BitBucket Pipeline还免费一个月提供50分钟的CI构建时间，勉强够用了。Pipeline构建出Docker包上传到hub.docker.com的私有repo</p>
+<h2 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h2><p>在部署机器上编写docker-compose.yml文件使用docker-compose进行部署，当提交了新的代码后，Pipeline自动构建出包，然后在部署机器上只需要执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">docker pull &lt;PACKAGE_NAME&gt;</div><div class="line">docker-compose up -d</div></pre></td></tr></table></figure></p>
+<p>就会自动更新部署，由于Docker打包的特性，每次升级实际上只升级了小部分layer，无论是上传docker还是从docker下载，实际上传输的大小都只有20+M，但导出镜像估计就得有500+M，毕竟JDK 9 的块头实在是太大，我试图自己封装也只是减少了40+M的样子，还不如直接套用现有的<a href="https://hub.docker.com/r/azul/zulu-openjdk-debian/" target="_blank" rel="external">azul/zulu-openjdk-debia</a>镜像.</p>
+<h2 id="下一步"><a href="#下一步" class="headerlink" title="下一步"></a>下一步</h2><ol>
+<li>想出到底要做啥吧</li>
+<li>自动部署，不用自己去pull以及up，以及试试consul</li>
+<li>用这个学习K8S暂不考虑，这EC太破了，跑不动那么大的集群。</li>
+</ol>
+<p>PS. Stream貌似鸽了很久，玩心太大，收不住啊~~~</p>
 
                     
                     <!-- Tags Bottom -->
                     
                         <div class="tags-container-bottom">
-                            <i class="fa fa-tag pr3 text-main-color"></i><a class="fw3 ph1 dib" href="/tags/home/">#home</a>
+                            <i class="fa fa-tag pr3 text-main-color"></i><a class="fw3 ph1 dib" href="/tags/Docker/">#Docker</a> <a class="fw3 ph1 dib" href="/tags/nginx/">#nginx</a>
                         </div>
                     
 
